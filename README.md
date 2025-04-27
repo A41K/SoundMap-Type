@@ -1,3 +1,6 @@
+Csak egy kis ChatGPT által generált izé mert kell hogy fancy legyen
+
+
 # SoundMap - Discover Music Around the World
 
 SoundMap is an interactive web application that displays music orbs on a world map. Each orb represents a different music track with its own genre and rarity level. Users can explore the map, click on orbs to play music, and discover new tracks from around the world.
@@ -16,26 +19,6 @@ SoundMap is an interactive web application that displays music orbs on a world m
 - **Howler.js**: For audio playback capabilities
 - **Vite**: For fast development and building
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v14 or higher)
-- npm (v6 or higher)
-
-### Installation
-
-1. Clone the repository
-2. Install dependencies:
-   ```
-   npm install
-   ```
-3. Start the development server:
-   ```
-   npm run dev
-   ```
-4. Open your browser and navigate to `http://localhost:5173`
-
 ## How to Use
 
 1. Navigate the map by dragging and zooming
@@ -44,16 +27,6 @@ SoundMap is an interactive web application that displays music orbs on a world m
 4. Adjust volume using the volume slider
 5. View track information in the info panel that appears when a track is playing
 
-## Customization
-
-You can add your own music tracks by editing the `data.js` file. Each track requires the following information:
-
-- Title
-- Artist
-- Genre
-- Rarity level
-- Geographic coordinates (latitude and longitude)
-- Audio source URL
 
 ## License
 

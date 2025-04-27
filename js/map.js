@@ -86,50 +86,178 @@ function getOrbSizeByRarity(rarity) {
 
 // Initialize user location tracking
 function initUserLocationTracking(map) {
+  // Update status message
+  updateStatusMessage('Checking location permissions...');
+  
   // Check if geolocation is available
-  if (navigator.geolocation) {
-    // Get initial position
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userLatLng = [position.coords.latitude, position.coords.longitude];
-        
-        // Center map on user's location and zoom in
-        map.setView(userLatLng, 15);
-        
-        // Create user marker
-        createUserMarker(map, userLatLng);
-        
-        // Generate music orbs around user
-        generateMusicOrbsAroundUser(map, userLatLng, 30); // Generate 20 orbs
-      },
-      (error) => {
-        console.error('Error getting location:', error);
-        // If location access is denied, use a default location
-        const defaultLocation = [40.7128, -74.0060]; // New York
-        map.setView(defaultLocation, 10);
-      },
-      { enableHighAccuracy: true }
-    );
-    
-    // Watch for position changes
-    navigator.geolocation.watchPosition(
-      (position) => {
-        const userLatLng = [position.coords.latitude, position.coords.longitude];
-        
-        // Update user marker
-        updateUserMarker(map, userLatLng);
-        
-        // Check if we need to generate more orbs
-        if (shouldGenerateMoreOrbs(userLatLng)) {
-          generateMusicOrbsAroundUser(map, userLatLng, 5); // Generate 5 more orbs
-        }
-      },
-      (error) => {
-        console.error('Error watching location:', error);
-      },
-      { enableHighAccuracy: true, maximumAge: 10000 }
-    );
+  if (!navigator.geolocation) {
+    updateStatusMessage('Geolocation is not supported by your browser', 'error');
+    useDefaultLocation(map);
+    return;
   }
+  
+  // Check for permissions API support
+  if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: 'geolocation' })
+      .then(permissionStatus => {
+        // Handle initial permission state
+        handlePermissionState(permissionStatus.state, map);
+        
+        // Listen for permission changes
+        permissionStatus.onchange = () => {
+          handlePermissionState(permissionStatus.state, map);
+        };
+      })
+      .catch(error => {
+        console.error('Error checking geolocation permission:', error);
+        // Try to get position anyway
+        requestGeolocation(map);
+      });
+  } else {
+    // Permissions API not supported, try to get location directly
+    requestGeolocation(map);
+  }
+}
+
+// Handle different permission states
+function handlePermissionState(state, map) {
+  switch (state) {
+    case 'granted':
+      updateStatusMessage('Location access granted, finding your position...');
+      requestGeolocation(map);
+      break;
+    case 'prompt':
+      updateStatusMessage('Please allow location access when prompted');
+      requestGeolocation(map);
+      break;
+    case 'denied':
+      updateStatusMessage('Location access denied. Using default location.', 'error');
+      useDefaultLocation(map);
+      break;
+    default:
+      updateStatusMessage('Unknown permission state. Trying to access location...');
+      requestGeolocation(map);
+  }
+}
+
+// Request geolocation with proper error handling
+function requestGeolocation(map) {
+  // Show loading indicator
+  updateStatusMessage('Locating you...');
+  
+  // Get initial position
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const userLatLng = [position.coords.latitude, position.coords.longitude];
+      
+      // Center map on user's location and zoom in
+      map.setView(userLatLng, 15);
+      
+      // Create user marker
+      createUserMarker(map, userLatLng);
+      
+      // Generate music orbs around user
+      generateMusicOrbsAroundUser(map, userLatLng, 60);
+      
+      // Update status message
+      updateStatusMessage('Found your location! Discover music around you.', 'success');
+      
+      // Start watching position
+      startPositionWatching(map);
+    },
+    (error) => {
+      console.error('Error getting location:', error);
+      
+      // Handle specific error codes
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          updateStatusMessage('Location access was denied. Please enable location services in your browser settings.', 'error');
+          break;
+        case error.POSITION_UNAVAILABLE:
+          updateStatusMessage('Location information is unavailable. Using default location.', 'error');
+          break;
+        case error.TIMEOUT:
+          updateStatusMessage('Location request timed out. Using default location.', 'error');
+          break;
+        default:
+          updateStatusMessage('An unknown error occurred. Using default location.', 'error');
+      }
+      
+      useDefaultLocation(map);
+    },
+    { 
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+}
+
+// Start watching position changes
+function startPositionWatching(map) {
+  navigator.geolocation.watchPosition(
+    (position) => {
+      const userLatLng = [position.coords.latitude, position.coords.longitude];
+      
+      // Update user marker
+      updateUserMarker(map, userLatLng);
+      
+      // Check if we need to generate more orbs
+      if (shouldGenerateMoreOrbs(userLatLng)) {
+        generateMusicOrbsAroundUser(map, userLatLng, 5); // Generate 5 more orbs
+      }
+    },
+    (error) => {
+      console.error('Error watching location:', error);
+      updateStatusMessage('Lost your location signal. Some features may be limited.', 'warning');
+    },
+    { 
+      enableHighAccuracy: true, 
+      maximumAge: 10000,
+      timeout: 15000
+    }
+  );
+}
+
+// Use default location when geolocation fails
+function useDefaultLocation(map) {
+  const defaultLocation = [40.7128, -74.0060]; // New York
+  map.setView(defaultLocation, 10);
+  
+  // Generate some default music orbs
+  generateMusicOrbsAroundUser(map, defaultLocation, 20);
+}
+
+// Update status message
+function updateStatusMessage(message, type = 'info') {
+  const statusMessage = document.getElementById('status-message') || createStatusMessage();
+  statusMessage.textContent = message;
+  
+  // Remove all status classes and add the current one
+  statusMessage.className = 'status-message';
+  statusMessage.classList.add(type);
+  
+  // Make sure it's visible
+  statusMessage.style.display = 'block';
+  
+  // For success messages, auto-hide after 5 seconds
+  if (type === 'success') {
+    setTimeout(() => {
+      statusMessage.classList.add('fade-out');
+      setTimeout(() => {
+        statusMessage.style.display = 'none';
+      }, 1000);
+    }, 5000);
+  }
+}
+
+// Create status message element if it doesn't exist
+function createStatusMessage() {
+  const statusMessage = document.createElement('div');
+  statusMessage.id = 'status-message';
+  statusMessage.className = 'status-message';
+  document.body.appendChild(statusMessage);
+  return statusMessage;
 }
 
 // Create user marker on the map
@@ -177,8 +305,8 @@ function shouldGenerateMoreOrbs(currentLatLng) {
     return true;
   }
   
-  // Calculate distance between last generation point and current position
-  const distance = map.distance(currentLatLng, lastGeneratedPosition);
+  // Calculate distance using Haversine formula instead of relying on map object
+  const distance = calculateDistance(currentLatLng, lastGeneratedPosition);
   
   if (distance > MIN_DISTANCE_FOR_NEW_ORBS) {
     lastGeneratedPosition = currentLatLng;
@@ -186,6 +314,22 @@ function shouldGenerateMoreOrbs(currentLatLng) {
   }
   
   return false;
+}
+
+// Calculate distance between two points using Haversine formula
+function calculateDistance(point1, point2) {
+  const R = 6371e3; // Earth's radius in meters
+  const lat1 = point1[0] * Math.PI / 180;
+  const lat2 = point2[0] * Math.PI / 180;
+  const deltaLat = (point2[0] - point1[0]) * Math.PI / 180;
+  const deltaLng = (point2[1] - point1[1]) * Math.PI / 180;
+  
+  const a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) +
+          Math.cos(lat1) * Math.cos(lat2) *
+          Math.sin(deltaLng/2) * Math.sin(deltaLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  
+  return R * c; // Distance in meters
 }
 
 // Generate random music orbs around a position

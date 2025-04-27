@@ -157,6 +157,44 @@ main {
   color: #FF9800;
 }
 
+/* Status message styles */
+.status-message {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 1rem;
+  z-index: 1000;
+  text-align: center;
+  max-width: 90%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: opacity 0.5s ease-in-out;
+}
+
+.status-message.info {
+  border-left: 4px solid #2196F3;
+}
+
+.status-message.success {
+  border-left: 4px solid #4CAF50;
+}
+
+.status-message.warning {
+  border-left: 4px solid #FF9800;
+}
+
+.status-message.error {
+  border-left: 4px solid #F44336;
+}
+
+.status-message.fade-out {
+  opacity: 0;
+}
+
 /* Music orb styles */
 .music-orb {
   border-radius: 50%;
