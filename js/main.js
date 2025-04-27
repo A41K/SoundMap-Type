@@ -17,20 +17,7 @@ musicData.slice(0, 10).forEach(music => {
   createMusicOrb(map, music);
 });
 
-// Add status message for user
-const statusMessage = document.createElement('div');
-statusMessage.id = 'status-message';
-statusMessage.className = 'status-message';
-statusMessage.textContent = 'Locating you and generating music orbs nearby...';
-document.body.appendChild(statusMessage);
-
-// Hide status message after 5 seconds
-setTimeout(() => {
-  statusMessage.classList.add('fade-out');
-  setTimeout(() => {
-    statusMessage.remove();
-  }, 1000);
-}, 5000);
+// Status messages are now handled by the map.js module
 
 // Handle play/pause button
 const togglePlayButton = document.getElementById('toggle-play');
