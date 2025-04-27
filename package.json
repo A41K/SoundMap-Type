@@ -1,0 +1,18 @@
+{
+  "name": "soundmap-type",
+  "version": "1.0.0",
+  "description": "An interactive map with music orbs of different genres and rarities",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "howler": "^2.2.3"
+  },
+  "devDependencies": {
+    "vite": "^4.4.9"
+  }
+}
